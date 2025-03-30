@@ -1,0 +1,48 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: unless-stopped
+    container_name: sqlserver_cmp
+    environment:
+      - SA_PASSWORD=P@ssw0rd123!
+      - ACCEPT_EULA=Y
+      - MSSQL_USER=msuser
+      - MSSQL_PASSWORD=mspasswordC0mpl3x
+      - MSSQL_DATABASE=msdb
+    ports:
+      - "1433:1433"
+
+  postgresql:
+    image: postgres:latest
+    restart: unless-stopped
+    container_name: postgresql_cmp
+    environment:
+      - POSTGRES_USER=pguser
+      - POSTGRES_PASSWORD=pgpasswordC0mpl3x
+      - POSTGRES_DB=pgdb
+    ports:
+      - "5432:5432"
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    restart: unless-stopped
+    container_name: pgadmin_cmp
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=adminC0mpl3x
+      - PGADMIN_LISTEN_PORT=80
+      - PGADMIN_CONFIG_SERVER_MODE=False
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgresql
+
+  nifi:
+    image: apache/nifi:latest
+    restart: unless-stopped
+    container_name: nifi_cmp
+    ports:
+      - "8443:8443"
+    volumes:
+      - drivers_location:/opt/nifi/nifi-current/lib
+      
