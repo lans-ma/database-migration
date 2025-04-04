@@ -1,5 +1,6 @@
 ﻿namespace Kata.Db.Console.Model
 {
+    using Kata.Data.Migration;
     using System;
 
     public class User : Entity

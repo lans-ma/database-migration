@@ -33,24 +33,6 @@
             Console.ReadKey();
         }
 
-        private static async Task Migrate<T>(MigrationDbContext<T> dbContext)
-            where T : MigrationDbContext<T>
-        {
-            Logger.LogInformation($"Starting migration for {typeof(T).Name}...");
-            var migrator = dbContext.GetService<IMigrator>();
-            if (migrator.HasPendingModelChanges())
-            {
-                Logger.LogInformation("Pending model changes detected. Applying migrations...");
-                await dbContext.Database.MigrateAsync();
-                await dbContext.Database.EnsureCreatedAsync();
-            }
-            else
-            {
-                Logger.LogInformation("No pending model changes detected.");
-            }
-            Logger.LogInformation($"Migration for {typeof(T).Name} completed.");
-        }
-
         private static async Task MigrateDataFromSqlServerToPostgreSql(ILoggerFactory loggerFactory, IConfiguration configuration)
         {
             Logger.LogInformation("Starting data migration from SQL Server to PostgreSQL...");

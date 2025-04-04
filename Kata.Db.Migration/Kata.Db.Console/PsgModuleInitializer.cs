@@ -1,4 +1,4 @@
-﻿namespace Kata.Db.Console;
+﻿      namespace Kata.Db.Console;
 
 using System.Runtime.CompilerServices;
 using System;
