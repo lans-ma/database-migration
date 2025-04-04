@@ -2,13 +2,15 @@
 {
     using Kata.Db.Console.Model;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Configuration;
     using System.Threading.Tasks;
 
     public abstract class MigrationDbContext<T> : DbContext, IMigrationDbContext
         where T : MigrationDbContext<T>
     {
-        public MigrationDbContext(DbContextOptions<T> options) : base(options)
+        protected MigrationDbContext(IConfiguration configuration) : base()
         {
+            Configuration = configuration;
         }
 
         public DbSet<User> Users { get; set; }
@@ -21,5 +23,6 @@
         {
             return await base.SaveChangesAsync();
         }
+        protected IConfiguration Configuration { get; }
     }
 }

@@ -7,6 +7,7 @@
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
     using System;
+    using System.Diagnostics;
     using System.IO;
     using System.Threading.Tasks;
 
@@ -24,15 +25,10 @@
 
             var loggerFactory = new ConsoleLoggerFactory();
 
-            using var sqlServerDbContext = new SqlServerDbContext(configuration);
-            using var postgreSqlDbContext = new PostgreSqlDbContext(configuration);
 
             Logger = loggerFactory.CreateLogger(nameof(Program));
             Logger.LogInformation("Starting migration...");
-
-            await Migrate(sqlServerDbContext);
-            await Migrate(postgreSqlDbContext);
-            await MigrateDataFromSqlServerToPostgreSql(loggerFactory, sqlServerDbContext, postgreSqlDbContext);
+            await MigrateDataFromSqlServerToPostgreSql(loggerFactory, configuration);
 
             Console.ReadKey();
         }
@@ -55,16 +51,19 @@
             Logger.LogInformation($"Migration for {typeof(T).Name} completed.");
         }
 
-        private static async Task MigrateDataFromSqlServerToPostgreSql<TSource, TDest>(ILoggerFactory loggerFactory, MigrationDbContext<TSource> source, MigrationDbContext<TDest> dest)
-            where TSource : MigrationDbContext<TSource>
-            where TDest : MigrationDbContext<TDest>
+        private static async Task MigrateDataFromSqlServerToPostgreSql(ILoggerFactory loggerFactory, IConfiguration configuration)
         {
             Logger.LogInformation("Starting data migration from SQL Server to PostgreSQL...");
+            var stopWatcher = Stopwatch.StartNew();
+            var dataMigrationService = new SqlServerToPostgreDataMigrationService(
+                loggerFactory,
+                configuration,
+                c => new SqlServerDbContext(c),
+                c => new PostgreSqlDbContext(c)
+                );
+            await dataMigrationService.MigrateDataAsync();
 
-            var dataMigrationService = new DataMigrationService(loggerFactory);
-            await dataMigrationService.MigrateDataAsync(source, dest);
-
-            Logger.LogInformation("Data migration from SQL Server to PostgreSQL completed.");
+            Logger.LogInformation($"Data migration from SQL Server to PostgreSQL completed. TotalElapsed:{stopWatcher.Elapsed}");
         }
     }
 }
