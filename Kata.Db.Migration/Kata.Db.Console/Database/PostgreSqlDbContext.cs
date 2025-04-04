@@ -3,7 +3,7 @@
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
 
-    public class PostgreSqlDbContext : MigrationDbContext<PostgreSqlDbContext>
+    public class PostgreSqlDbContext : MigrationDbContext
     {
         public PostgreSqlDbContext(IConfiguration configuration)
             : base(configuration)
