@@ -6,10 +6,14 @@
     public class SqlServerDbContext : MigrationDbContext<SqlServerDbContext>
     {
         public SqlServerDbContext(IConfiguration configuration)
-            : base(new DbContextOptionsBuilder<SqlServerDbContext>()
-                  .UseSqlServer(configuration.GetConnectionString("SqlServer"))
-                  .Options)
+            : base(configuration)
         {
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseSqlServer(Configuration.GetConnectionString("SqlServer"));
+            base.OnConfiguring(optionsBuilder);
         }
     }
 }
