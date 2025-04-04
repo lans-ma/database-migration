@@ -1,10 +1,10 @@
 ﻿namespace Kata.Db.Console
 {
+    using Kata.Data.Migration;
     using Kata.Db.Console.Database;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
     using System;
-    using System.Threading.Tasks;
 
     internal class SqlServerToPostgreDataMigrationService : DataMigrationServiceBase<SqlServerDbContext, PostgreSqlDbContext>
     {
@@ -15,14 +15,13 @@
             Func<IConfiguration, PostgreSqlDbContext> destFactory)
             : base(loggerFactory, configuration, sourceFactory, destFactory)
         {
-            
         }
 
-        public async override Task MigrateDataAsync()
+        protected override void ConfigureDataMigration()
         {
-            await MigrateAsync(c => c.Rentals);
-            await MigrateAsync(c => c.Books);
-            await MigrateAsync(c => c.Users);
+            this.AddDataMigration(s => s.Books, d => d.Books);
+            this.AddDataMigration(s => s.Users, d => d.Users);
+            this.AddDataMigration(s => s.Rentals, d => d.Rentals);
         }
     }
 }
