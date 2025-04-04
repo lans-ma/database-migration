@@ -6,8 +6,14 @@
     public class PostgreSqlDbContext : MigrationDbContext<PostgreSqlDbContext>
     {
         public PostgreSqlDbContext(IConfiguration configuration)
-            : base(new DbContextOptionsBuilder<PostgreSqlDbContext>().UseNpgsql(configuration.GetConnectionString("PostgreSQL")).Options)
+            : base(configuration)
         {
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseNpgsql(Configuration.GetConnectionString("PostgreSQL"));
+            base.OnConfiguring(optionsBuilder);
         }
     }
 }
