@@ -2,7 +2,7 @@
 {
     using System.Threading.Tasks;
 
-    internal interface IMigrationUnit
+    internal interface IEntityMigrator
     {
         Task MigrateAsync();
     }
