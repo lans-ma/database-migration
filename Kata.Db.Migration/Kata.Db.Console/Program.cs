@@ -1,9 +1,6 @@
 ﻿namespace Kata.Db.Console
 {
     using Kata.Db.Console.Database;
-    using Microsoft.EntityFrameworkCore;
-    using Microsoft.EntityFrameworkCore.Infrastructure;
-    using Microsoft.EntityFrameworkCore.Migrations;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
     using System;
