@@ -1,6 +1,7 @@
 namespace Kata.Data.Migration.Tests
 {
     using Kata.Data.Migration;
+    using Kata.Db.Console.Model;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
@@ -73,6 +74,8 @@ namespace Kata.Data.Migration.Tests
             var sourceContext = new TestSourceDbContext();
             sourceContext.TestEntities.Add(new TestEntity { Id = 1, Name = "Test1" });
             sourceContext.TestEntities.Add(new TestEntity { Id = 2, Name = "Test2" });
+            await ClearDestinationDatabaseAsync();
+
             var service = CreateMigrationService();
             service.AddDataMigration(c => c.TestEntities, c => c.TestEntities);
 
@@ -89,8 +92,16 @@ namespace Kata.Data.Migration.Tests
             Assert.That(items[1].Name, Is.EqualTo("Test2"));
         }
 
+        private static async Task<TestDestDbContext> ClearDestinationDatabaseAsync()
+        {
+            var destContext = new TestDestDbContext();
+            destContext.TestEntities.RemoveRange(destContext.TestEntities);
+            await destContext.SaveChangesAsync();
+            return destContext;
+        }
+
         [Test]
-        public async Task GivenItemsInDestination_WhenDataMigration_ThenItemsShouldBeUpdatedInDestination()
+        public async Task GivenItemsInDestination_WhenDataMigration_ThenNothingShouldBeMigrated()
         {
             // Arrange
             var sourceContext = new TestSourceDbContext();
@@ -110,11 +121,9 @@ namespace Kata.Data.Migration.Tests
 
             // Assert
             items = await new TestDestDbContext().TestEntities.ToListAsync();
-            Assert.That(items.Count, Is.EqualTo(2));
+            Assert.That(items.Count, Is.EqualTo(1));
             Assert.That(items[0].Id, Is.EqualTo(1));
-            Assert.That(items[0].Name, Is.EqualTo("Test1"));
-            Assert.That(items[1].Id, Is.EqualTo(2));
-            Assert.That(items[1].Name, Is.EqualTo("Test2"));
+            Assert.That(items[0].Name, Is.EqualTo("Test12312"));
         }
 
         private class TestDataMigrationService : DataMigrationServiceBase<TestSourceDbContext, TestDestDbContext>
@@ -129,8 +138,8 @@ namespace Kata.Data.Migration.Tests
             }
 
             public List<IEntityMigrator> MigrationUnits => (List<IEntityMigrator>)typeof(DataMigrationServiceBase<TestSourceDbContext, TestDestDbContext>)
-    .GetField("_migrationUnits", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-    .GetValue(this);
+                .GetField("_entityMigrators", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .GetValue(this);
 
             protected override void ConfigureDataMigration()
             {
