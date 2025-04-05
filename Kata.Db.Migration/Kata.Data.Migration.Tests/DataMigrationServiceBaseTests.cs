@@ -128,7 +128,7 @@ namespace Kata.Data.Migration.Tests
             {
             }
 
-            public List<IMigrationUnit> MigrationUnits => (List<IMigrationUnit>)typeof(DataMigrationServiceBase<TestSourceDbContext, TestDestDbContext>)
+            public List<IEntityMigrator> MigrationUnits => (List<IEntityMigrator>)typeof(DataMigrationServiceBase<TestSourceDbContext, TestDestDbContext>)
     .GetField("_migrationUnits", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
     .GetValue(this);
 
