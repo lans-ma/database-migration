@@ -14,7 +14,7 @@
     internal class EntityMigrator<TSource, TDest, TEntity> : IEntityMigrator
         where TSource : DbContext
         where TDest : DbContext
-        where TEntity : Entity
+        where TEntity : class
     {
         private readonly Func<IConfiguration, TSource> _sourceFactory;
         private readonly Func<IConfiguration, TDest> _destFactory;
@@ -105,9 +105,5 @@
 
             return query;
         }
-
-
-
-
     }
 }

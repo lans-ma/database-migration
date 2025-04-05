@@ -1,4 +1,4 @@
-﻿namespace Kata.Data.Migration
+﻿namespace Kata.Db.Console.Model
 {
     public class Entity
     {
