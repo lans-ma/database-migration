@@ -27,5 +27,15 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+    
+    - name: Run tests and collect coverage
+      run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage"
+  
+    - name: Report coverage
+      uses: codecov/codecov-action@v2
+      with:
+        files: ./src/**/coverage.cobertura.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
+   
