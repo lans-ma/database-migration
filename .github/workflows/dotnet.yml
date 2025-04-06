@@ -34,7 +34,7 @@ jobs:
     - name: Report coverage
       uses: codecov/codecov-action@v2
       with:
-        files: ./src/**/coverage.cobertura.xml
+        files: ./**/coverage.cobertura.xml
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: true
