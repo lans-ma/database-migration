@@ -37,8 +37,8 @@
             var dataMigrationService = new SqlServerToPostgreDataMigrationService(
                 loggerFactory,
                 configuration,
-                c => new SqlServerDbContext(c),
-                c => new PostgreSqlDbContext(c)
+                new SqlServerDbContext(configuration),
+                new PostgreSqlDbContext(configuration)
                 );
             await dataMigrationService.MigrateDataAsync();
 

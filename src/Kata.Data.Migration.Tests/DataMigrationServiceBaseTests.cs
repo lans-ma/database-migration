@@ -35,8 +35,8 @@ namespace Kata.Data.Migration.Tests
             return new TestDataMigrationService(
                 _loggerFactoryMock.Object,
                 _configurationMock.Object,
-                _ => new TestSourceDbContext(),
-                _ => new TestDestDbContext());
+                new TestSourceDbContext(),
+                new TestDestDbContext());
         }
 
         [Test]
@@ -131,9 +131,9 @@ namespace Kata.Data.Migration.Tests
             public TestDataMigrationService(
                 ILoggerFactory loggerFactory,
                 IConfiguration configuration,
-                Func<IConfiguration, TestSourceDbContext> sourceFactory,
-                Func<IConfiguration, TestDestDbContext> destFactory)
-                : base(loggerFactory, configuration, sourceFactory, destFactory)
+                TestSourceDbContext sourceDbContext,
+                TestDestDbContext destDbContext)
+                : base(loggerFactory, configuration, sourceDbContext, destDbContext)
             {
             }
 

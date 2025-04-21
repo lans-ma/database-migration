@@ -1,7 +1,6 @@
 ﻿namespace Kata.Data.Migration
 {
     using Microsoft.EntityFrameworkCore;
-    using Microsoft.Extensions.Configuration;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq.Expressions;
@@ -16,24 +15,21 @@
         where TDest : DbContext
         where TEntity : class
     {
-        private readonly Func<IConfiguration, TSource> _sourceFactory;
-        private readonly Func<IConfiguration, TDest> _destFactory;
+        private readonly TSource _sourceDbContext;
+        private readonly TDest _destDbContext;
         private readonly Expression<Func<TSource, DbSet<TEntity>>> _sourceDbSetSelector;
         private readonly Expression<Func<TDest, DbSet<TEntity>>> _destDbSetSelector;
         private readonly ILogger _logger;
-        private readonly IConfiguration _configuration;
 
         public EntityMigrator(
-            IConfiguration configuration,
-            Func<IConfiguration, TSource> sourceFactory,
-            Func<IConfiguration, TDest> destFactory,
+            TSource sourceFactory,
+            TDest destFactory,
             Expression<Func<TSource, DbSet<TEntity>>> sourceDbSetSelector,
             Expression<Func<TDest, DbSet<TEntity>>> destDbSetSelector,
             ILoggerFactory loggerFactory)
         {
-            _configuration = configuration;
-            _sourceFactory = sourceFactory;
-            _destFactory = destFactory;
+            _sourceDbContext = sourceFactory;
+            _destDbContext = destFactory;
             _sourceDbSetSelector = sourceDbSetSelector;
             _destDbSetSelector = destDbSetSelector;
             _logger = loggerFactory.CreateLogger(nameof(EntityMigrator<TSource, TDest, TEntity>));
@@ -41,32 +37,41 @@
 
         public async Task MigrateAsync()
         {
-
-            using var sourceDbContext = _sourceFactory.Invoke(_configuration);
-            using var destDbContext = _destFactory.Invoke(_configuration);
-            sourceDbContext.ChangeTracker.AutoDetectChangesEnabled = false;
-            destDbContext.ChangeTracker.AutoDetectChangesEnabled = false;
+            _sourceDbContext.ChangeTracker.AutoDetectChangesEnabled = false;
+            _destDbContext.ChangeTracker.AutoDetectChangesEnabled = false;
 
             await InternalMigrateAsync(
-                destDbContext,
-                _destDbSetSelector.Compile()(destDbContext),
-                _sourceDbSetSelector.Compile()(sourceDbContext));
+                _sourceDbContext,
+                _destDbContext,
+                _destDbSetSelector.Compile()(_destDbContext),
+                _sourceDbSetSelector.Compile()(_sourceDbContext));
         }
 
-        private async Task InternalMigrateAsync(TDest target, DbSet<TEntity> targetDbSet, DbSet<TEntity> sourceDbSet)
+        private async Task InternalMigrateAsync(TSource srcDbContext, TDest destDbContext, DbSet<TEntity> targetDbSet, DbSet<TEntity> sourceDbSet)
         {
-            if(await targetDbSet.AnyAsync())
-            {
-                _logger.LogInformation($"Skipping migration for {typeof(TEntity).Name} as it already exists in the target database.");
-                return;
-            }
-
             _logger.LogInformation($"Migrating {typeof(TEntity).Name}...");
             var watcher = Stopwatch.StartNew();
-            var allEntities = await IncludeAll(target, sourceDbSet).ToListAsync();
-            await targetDbSet.AddRangeAsync(allEntities);
-            var nbItemSaved = await target.SaveChangesAsync();
-            _logger.LogInformation($"Saved {nbItemSaved} items in {watcher.ElapsedMilliseconds} ms");
+            var allEntities = await IncludeAll(destDbContext, sourceDbSet).ToListAsync();
+            await AddOrUpdateAsync(destDbContext, targetDbSet, allEntities);
+        }
+
+        private async Task AddOrUpdateAsync(TDest destDbContext, DbSet<TEntity> targetDbSet, List<TEntity> allEntities)
+        {
+            var primaryKeyProperties = destDbContext.Model.FindEntityType(typeof(TEntity)).FindPrimaryKey().Properties;
+            foreach (var entity in allEntities)
+            {
+                object[] keyValues = primaryKeyProperties.Select(p => entity.GetType().GetProperty(p.Name).GetValue(entity)).ToArray();
+                var existingEntity = await targetDbSet.FindAsync(keyValues);
+
+                if (existingEntity != null)
+                {
+                    _destDbContext.Entry(existingEntity).CurrentValues.SetValues(entity);
+                }
+                else
+                {
+                    await targetDbSet.AddAsync(entity);
+                }
+            }
         }
 
         private IQueryable<T> IncludeAll<T>(TDest dbContext, DbSet<T> dbSet) where T : class
@@ -78,29 +83,6 @@
             foreach (var navigation in navigations)
             {
                 query = query.Include(navigation.Name);
-            }
-
-            var entities = query.ToList();
-            foreach (var entity in entities)
-            {
-                foreach (var navigation in navigations)
-                {
-                    var navigationValue = navigation.GetValue(entity);
-                    if (navigationValue != null)
-                    {
-                        if (navigationValue is IEnumerable<object> navigationCollection)
-                        {
-                            foreach (var item in navigationCollection)
-                            {
-                                dbContext.Entry(item).State = EntityState.Unchanged;
-                            }
-                        }
-                        else
-                        {
-                            dbContext.Entry(navigationValue).State = EntityState.Unchanged;
-                        }
-                    }
-                }
             }
 
             return query;
