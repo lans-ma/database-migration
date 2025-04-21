@@ -14,22 +14,20 @@
     {
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
-        private readonly Func<IConfiguration, TSource> _sourceFactory;
-        private readonly Func<IConfiguration, TDest> _destFactory;
-        private readonly IConfiguration _configuration;
+        private readonly TSource _sourceDbContext;
+        private readonly TDest _destDbContext;
         private readonly List<IEntityMigrator> _entityMigrators = new();
 
         protected DataMigrationServiceBase(
             ILoggerFactory loggerFactory,
             IConfiguration configuration,
-            Func<IConfiguration, TSource> sourceFactory,
-            Func<IConfiguration, TDest> destFactory)
+            TSource sourceDbContext,
+            TDest destDbContext)
         {
             _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger(nameof(DataMigrationServiceBase<TSource, TDest>));
-            _sourceFactory = sourceFactory;
-            _destFactory = destFactory;
-            _configuration = configuration;
+            _sourceDbContext = sourceDbContext;
+            _destDbContext = destDbContext;
         }
 
         public async Task MigrateDataAsync()
@@ -45,6 +43,7 @@
             {
                 await unit.MigrateAsync();
             }
+            await _destDbContext.SaveChangesAsync();
         }
 
         protected void AddDataMigration<T>(Expression<Func<TSource, DbSet<T>>> sourceDbSetSelector, Expression<Func<TDest, DbSet<T>>> destDbSetSelector)
@@ -52,9 +51,8 @@
         {
             _entityMigrators.Add(
                 new EntityMigrator<TSource, TDest, T>(
-                _configuration,
-                _sourceFactory,
-                _destFactory,
+                _sourceDbContext,
+                _destDbContext,
                 sourceDbSetSelector,
                 destDbSetSelector,
                 _loggerFactory));

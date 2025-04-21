@@ -11,17 +11,17 @@
         public SqlServerToPostgreDataMigrationService(
             ILoggerFactory loggerFactory,
             IConfiguration configuration,
-            Func<IConfiguration, SqlServerDbContext> sourceFactory,
-            Func<IConfiguration, PostgreSqlDbContext> destFactory)
-            : base(loggerFactory, configuration, sourceFactory, destFactory)
+            SqlServerDbContext sourceDbContext,
+            PostgreSqlDbContext destinationDbContext)
+            : base(loggerFactory, configuration, sourceDbContext, destinationDbContext)
         {
         }
 
         protected override void ConfigureDataMigration()
         {
+            this.AddDataMigration(s => s.Rentals, d => d.Rentals);
             this.AddDataMigration(s => s.Books, d => d.Books);
             this.AddDataMigration(s => s.Users, d => d.Users);
-            this.AddDataMigration(s => s.Rentals, d => d.Rentals);
         }
     }
 }
