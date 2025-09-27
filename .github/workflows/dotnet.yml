@@ -13,6 +13,9 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./src
 
     steps:
     - uses: actions/checkout@v4
@@ -24,5 +27,15 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+    
+    - name: Run tests and collect coverage
+      run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage"
+  
+    - name: Report coverage
+      uses: codecov/codecov-action@v2
+      with:
+        files: ./**/coverage.cobertura.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
+   
