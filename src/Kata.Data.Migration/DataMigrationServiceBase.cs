@@ -50,7 +50,7 @@
             where T : class
         {
             _entityMigrators.Add(
-                new EntityMigrator<TSource, TDest, T>(
+                new BulkEntityMigrator<TSource, TDest, T>(
                 _sourceDbContext,
                 _destDbContext,
                 sourceDbSetSelector,
