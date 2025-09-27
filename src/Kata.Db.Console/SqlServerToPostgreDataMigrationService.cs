@@ -19,9 +19,9 @@
 
         protected override void ConfigureDataMigration()
         {
-            this.AddDataMigration(s => s.Rentals, d => d.Rentals);
             this.AddDataMigration(s => s.Books, d => d.Books);
             this.AddDataMigration(s => s.Users, d => d.Users);
+            this.AddDataMigration(s => s.Rentals, d => d.Rentals);
         }
     }
 }
